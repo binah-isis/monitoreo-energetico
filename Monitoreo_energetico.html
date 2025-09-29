@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aplicación de monitoreo de elementos críticos para plantas de generación de energía</title>
+<style>
+  :root{
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --accent:#2b7cff;
+    --success:#16a34a;
+    --glass: rgba(255,255,255,0.6);
+    --radius:12px;
+    --shadow: 0 6px 18px rgba(16,24,40,0.06);
+    --soft-shadow: 0 3px 10px rgba(16,24,40,0.04);
+  }
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg, var(--bg) 0%, #eef3fb 100%);
+    color:#111827;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:20px;
+  }
+
+  .container{
+    max-width:1100px;
+    margin:0 auto;
+  }
+
+  header{
+    display:flex;
+    gap:16px;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .logo {
+    width:64px;height:64px;border-radius:14px;
+    background:linear-gradient(135deg,var(--accent),#7dd3fc);
+    display:flex;align-items:center;justify-content:center;color:white;font-weight:700;
+    box-shadow: var(--shadow);
+    font-size:20px;
+  }
+  h1{
+    margin:0;font-size:20px;
+  }
+  p.lead{margin:4px 0 0;color:var(--muted);font-size:14px}
+
+  /* Layout */
+  .layout {
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:20px;
+    align-items:start;
+  }
+
+  @media (max-width:980px){
+    .layout{grid-template-columns:1fr}
+  }
+
+  /* Left column card */
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow:var(--soft-shadow);
+  }
+
+  /* Accordion */
+  .accordion{display:flex;flex-direction:column;gap:10px}
+  .acc-item{
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid rgba(15,23,42,0.04);
+    background:linear-gradient(180deg, rgba(255,255,255,0.85), var(--card));
+  }
+  .acc-head{
+    display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;
+  }
+  .acc-head h3{margin:0;font-size:16px}
+  .acc-head p{margin:0;color:var(--muted);font-size:13px}
+  .acc-body{padding:12px 16px;border-top:1px solid rgba(15,23,42,0.03);display:none}
+  .acc-body.active{display:block}
+
+  /* Form styles */
+  form .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .field{flex:1;min-width:160px;display:flex;flex-direction:column}
+  label{font-size:13px;color:var(--muted);margin-bottom:6px}
+  input[type="text"], input[type="number"], textarea, select{
+    padding:10px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);
+    background:linear-gradient(180deg, #fff, var(--glass));
+    outline:none;font-size:14px;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, select:focus{
+    box-shadow:0 6px 16px rgba(43,124,255,0.08);
+    border-color: rgba(43,124,255,0.25);
+  }
+  .small{font-size:12px;color:var(--muted)}
+
+  .btn{
+    background:var(--accent);color:white;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600;
+    box-shadow: 0 6px 14px rgba(43,124,255,0.12);
+  }
+  .btn.secondary{background:#efefef;color:#111;border:1px solid rgba(0,0,0,0.06);box-shadow:none}
+
+  /* Right column / summary */
+  .summary { position:sticky; top:20px; display:flex;flex-direction:column; gap:12px; }
+  .result { padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#fcfcff); box-shadow:var(--soft-shadow); }
+  .result h4{margin:0 0 6px 0}
+  .result pre{white-space:pre-wrap;margin:0;font-size:13px;color:#0f172a}
+
+  /* Confirmation message */
+  .confirm {
+    margin-top:8px;padding:12px;border-radius:10px;background:rgba(16,185,129,0.12);color:var(--success);display:none;font-weight:600;
+    border:1px solid rgba(16,185,129,0.18)
+  }
+
+  footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+  .muted-xs{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">IA</div>
+      <div>
+        <h1>Aplicación de monitoreo de elementos críticos para plantas de generación de energía</h1>
+        <p class="lead">Monitoreo de Generadores, Sistemas de arranque, Válvulas, Sensores y presión de aceite — cálculos en línea.</p>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- LEFT: Accordion + forms -->
+      <div class="card">
+        <div class="accordion" id="accordion">
+
+          <!-- Generadores -->
+          <div class="acc-item" id="acc-generador">
+            <div class="acc-head" data-target="body-generador">
+              <div>
+                <h3>Generadores</h3>
+                <p class="small">Medición de vibración, temperatura y presión (aceite/refrigeración)</p>
+              </div>
+              <div class="small">Desplegar ▾</div>
+            </div>
+            <div class="acc-body" id="body-generador">
+              <form data-element="generador" class="form-element">
+                <div class="row">
+                  <div class="field">
+                    <label>Vibración (muestras, separadas por coma) — mm/s</label>
+                    <input type="text" name="vibracion" placeholder="ej: 2.1,2.3,2.0">
+                    <div class="small">Se calculará RMS</div>
+                  </div>
+                  <div class="field">
+                    <label>Temperatura devanado — °C</label>
+                    <input type="number" step="0.1" name="temperatura" placeholder="ej: 85">
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Presión aceite (manométrica) — Pa</label>
+                    <input type="number" name="presion" step="1" placeholder="ej: 210000">
+                  </div>
+                  <div class="field">
+                    <label>Resistencia térmica estimada Rth — K/W (opcional)</label>
+                    <input type="number" step="0.001" name="rth" placeholder="ej: 0.25">
+                    <div class="small">Si se introduce y pérdidas (W), se estimará ΔT</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field" style="flex-basis:200px">
+                    <label>Pérdidas estimadas (W) — opcional</label>
+                    <input type="number" name="perdidas" step="1" placeholder="ej: 1200">
+                  </div>
+                  <div class="field" style="flex-basis:160px">
+                    <label>Temperatura ambiente — °C</label>
+                    <input type="number" name="Tamb" step="0.1" placeholder="ej: 30">
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+                  <button type="button" class="btn" onclick="handleSubmit(event, this)">Calcular Generador</button>
+                  <button type="button" class="btn secondary" onclick="resetForm(this.closest('form'))">Limpiar</button>
+                </div>
+                <div class="confirm" aria-live="polite"></div>
+              </form>
+
+              <div class="result" id="result-generador" style="margin-top:10px;display:none">
+                <h4>Resultados Generador</h4>
+                <pre id="out-generador"></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sistemas de arranque -->
+          <div class="acc-item" id="acc-arranque">
+            <div class="acc-head" data-target="body-arranque">
+              <div>
+                <h3>Sistemas de arranque</h3>
+                <p class="small">Vibración, temperatura del motor/engranes y presión (hidráulica si aplica)</p>
+              </div>
+              <div class="small">Desplegar ▾</div>
+            </div>
+            <div class="acc-body" id="body-arranque">
+              <form data-element="arranque" class="form-element">
+                <div class="row">
+                  <div class="field">
+                    <label>Vibración (muestras) — mm/s</label>
+                    <input type="text" name="vibracion" placeholder="ej: 1.1,1.3,1.2">
+                  </div>
+                  <div class="field">
+                    <label>Temperatura bobina — °C</label>
+                    <input type="number" name="temperatura" step="0.1" placeholder="ej: 68">
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Presión bomba (bar)</label>
+                    <input type="number" name="presion" step="0.01" placeholder="ej: 12.5">
+                  </div>
+                  <div class="field">
+                    <label>Tiempo de arranque (s)</label>
+                    <input type="number" name="t_arranque" step="1" placeholder="ej: 8">
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+                  <button type="button" class="btn" onclick="handleSubmit(event, this)">Calcular Arranque</button>
+                  <button type="button" class="btn secondary" onclick="resetForm(this.closest('form'))">Limpiar</button>
+                </div>
+                <div class="confirm" aria-live="polite"></div>
+              </form>
+
+              <div class="result" id="result-arranque" style="margin-top:10px;display:none">
+                <h4>Resultados Sistema de arranque</h4>
+                <pre id="out-arranque"></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Válvulas de control -->
+          <div class="acc-item" id="acc-valvula">
+            <div class="acc-head" data-target="body-valvula">
+              <div>
+                <h3>Válvulas de control</h3>
+                <p class="small">Vibración por flujo, ΔT, y caída de presión</p>
+              </div>
+              <div class="small">Desplegar ▾</div>
+            </div>
+            <div class="acc-body" id="body-valvula">
+              <form data-element="valvula" class="form-element">
+                <div class="row">
+                  <div class="field">
+                    <label>Velocidad del fluido — m/s</label>
+                    <input type="number" name="velocidad" step="0.01" placeholder="ej: 3.2">
+                  </div>
+                  <div class="field">
+                    <label>Diámetro característico — m</label>
+                    <input type="number" name="diametro" step="0.001" placeholder="ej: 0.05">
+                  </div>
+                  <div class="field">
+                    <label>Strouhal (St) — opcional</label>
+                    <input type="number" name="strouhal" step="0.01" placeholder="ej: 0.2" value="0.2">
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Temperatura entrada — °C</label>
+                    <input type="number" name="temp_in" step="0.1" placeholder="ej: 60">
+                  </div>
+                  <div class="field">
+                    <label>Temperatura salida — °C</label>
+                    <input type="number" name="temp_out" step="0.1" placeholder="ej: 55">
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Coeficiente Cv (opcional)</label>
+                    <input type="number" name="cv" step="0.01" placeholder="ej: 12.5">
+                  </div>
+                  <div class="field">
+                    <label>ΔP (Pa) — si se conoce</label>
+                    <input type="number" name="deltaP" step="1" placeholder="ej: 15000">
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+                  <button type="button" class="btn" onclick="handleSubmit(event, this)">Calcular Válvula</button>
+                  <button type="button" class="btn secondary" onclick="resetForm(this.closest('form'))">Limpiar</button>
+                </div>
+                <div class="confirm" aria-live="polite"></div>
+              </form>
+
+              <div class="result" id="result-valvula" style="margin-top:10px;display:none">
+                <h4>Resultados Válvula</h4>
+                <pre id="out-valvula"></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sensores -->
+          <div class="acc-item" id="acc-sensores">
+            <div class="acc-head" data-target="body-sensores">
+              <div>
+                <h3>Sensores de temperatura / presión</h3>
+                <p class="small">RTD (PT100), termopar, presión 4–20 mA y presión hidrostática</p>
+              </div>
+              <div class="small">Desplegar ▾</div>
+            </div>
+            <div class="acc-body" id="body-sensores">
+              <form data-element="sensores" class="form-element">
+                <div class="row">
+                  <div class="field">
+                    <label>RTD PT100 — Resistencia medida (Ω)</label>
+                    <input type="number" name="rtd_r" step="0.01" placeholder="ej: 138.51">
+                    <div class="small">Se usará Callendar–Van Dusen inverso (aprox) para T</div>
+                  </div>
+                  <div class="field">
+                    <label>Termopar — Voltaje (mV)</label>
+                    <input type="number" name="tc_mv" step="0.001" placeholder="ej: 3.215">
+                    <div class="small">Conversión aproximada (solo ejemplo)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Presión (4–20 mA) — Corriente (mA)</label>
+                    <input type="number" name="i_4_20" step="0.01" placeholder="ej: 12.3">
+                  </div>
+                  <div class="field">
+                    <label>Rango 4–20 mA — Pmin (unidad)</label>
+                    <input type="number" name="pmin" step="0.01" placeholder="ej: 0">
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Rango 4–20 mA — Pmax (misma unidad)</label>
+                    <input type="number" name="pmax" step="0.01" placeholder="ej: 10">
+                  </div>
+                  <div class="field">
+                    <label>Presión hidrostática — Altura columna h (m)</label>
+                    <input type="number" name="h" step="0.001" placeholder="ej: 1.5">
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Densidad fluido ρ (kg/m³) — para hidrostática</label>
+                    <input type="number" name="rho" step="0.1" placeholder="ej: 1000" value="1000">
+                  </div>
+                  <div class="field">
+                    <label>g (m/s²) — gravedad</label>
+                    <input type="number" name="g" step="0.001" placeholder="9.81" value="9.81">
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+                  <button type="button" class="btn" onclick="handleSubmit(event, this)">Calcular Sensores</button>
+                  <button type="button" class="btn secondary" onclick="resetForm(this.closest('form'))">Limpiar</button>
+                </div>
+                <div class="confirm" aria-live="polite"></div>
+              </form>
+
+              <div class="result" id="result-sensores" style="margin-top:10px;display:none">
+                <h4>Resultados Sensores</h4>
+                <pre id="out-sensores"></pre>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT: Summary / quick results -->
+      <aside class="summary">
+        <div class="result">
+          <h4>Guía rápida de fórmulas incluidas</h4>
+          <pre>
+- Vibración RMS: XRMS = sqrt( sum(x_i^2) / N )
+- Callendar–Van Dusen (PT100): R = R0(1 + A T + B T^2)
+  → se invierte (ecuación cuadrática) para T aproximado
+- 4–20 mA → P = Pmin + (I-4)/(16) * (Pmax-Pmin)
+- Presión hidrostática: p = ρ g h
+- Caudal simplificado: Q = Cv * sqrt(ΔP / ρ)
+          </pre>
+        </div>
+
+        <div class="result" id="last-results">
+          <h4>Últimos resultados</h4>
+          <pre id="latest">Sin cálculos aún.</pre>
+        </div>
+
+        <div class="result">
+          <h4>Notas</h4>
+          <pre class="muted-xs">
+Introduce solo números en campos numéricos.
+Los resultados son estimaciones para fines de monitoreo.
+Para usos críticos, valida con datos de fabricante.
+          </pre>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      Hecho con ❤️ para monitoreo industrial — versión demo.
+    </footer>
+  </div>
+
+<script>
+/* -------------------------
+  Funciones matemáticas / físicas
+   ------------------------- */
+
+function parseSamples(text){
+  if(!text) return [];
+  return text.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+}
+function calcularRMS(array){
+  if(!array.length) return null;
+  let s = array.reduce((acc,v)=> acc + v*v, 0);
+  return Math.sqrt(s / array.length);
+}
+
+// Callendar-Van Dusen (PT100) inversion (aprox) para 0..850°C
+// R = R0 * (1 + A T + B T^2)  =>  B T^2 + A T + (1 - R/R0) = 0
+function rtdToCelsius(R, R0=100, A=3.9083e-3, B=-5.775e-7){
+  if(!R || R <= 0) return null;
+  let C = 1 - R / R0;
+  let a = B, b = A, c = C;
+  // Resolvemos ax^2 + bx + c = 0
+  let disc = b*b - 4*a*c;
+  if(disc < 0) return null;
+  let t1 = (-b + Math.sqrt(disc)) / (2*a);
+  let t2 = (-b - Math.sqrt(disc)) / (2*a);
+  // Elegir la solución razonable (t1 suele ser > t2 para estos coef)
+  let t = (t1 > -200 && t1 < 1000) ? t1 : t2;
+  return t;
+}
+
+// Termopar (aprox) — Ejemplo simple: para tipo K, aproximación lineal en rango limitado
+function thermocoupleMvToCelsius(mv){
+  // Esto es solo una aproximación; para precisión usar tablas ITS-90
+  // Aproximación muy simplificada: 0 mV = 0°C; +4 mV ~ 100°C --> slope ~ 0.04 mV/°C
+  // Invertimos: Tc ≈ mv / 0.04
+  if(mv === null || mv === undefined || isNaN(mv)) return null;
+  return mv / 0.04;
+}
+
+// 4-20 mA mapping
+function current420ToRange(I_mA, Pmin, Pmax){
+  if(I_mA === null || I_mA === undefined || Pmin === undefined || Pmax === undefined) return null;
+  let p = Pmin + ((I_mA - 4) / 16) * (Pmax - Pmin);
+  return p;
+}
+
+// Hidrostática
+function presionHidrostatica(rho, g, h){
+  return rho * g * h;
+}
+
+// Caudal simple con Cv (nota: fórmula simplificada y unidades no estrictas)
+function caudalCv(Cv, deltaP, rho=1000){
+  if(!Cv || !deltaP) return null;
+  return Cv * Math.sqrt(Math.abs(deltaP) / rho);
+}
+
+/* -------------------------
+  UI: acordeón
+   ------------------------- */
+document.querySelectorAll('.acc-head').forEach(h => {
+  h.addEventListener('click', e => {
+    let tgt = h.dataset.target;
+    let body = document.getElementById(tgt);
+    // toggle
+    body.classList.toggle('active');
+    // collapse others (optional)
+    document.querySelectorAll('.acc-body').forEach(b => {
+      if(b.id !== tgt) b.classList.remove('active');
+    });
+    // scroll to opened section
+    if(body.classList.contains('active')){
+      body.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  });
+});
+
+/* -------------------------
+  Manejo de envío y cálculos
+   ------------------------- */
+
+function handleSubmit(evt, btn){
+  // get containing form
+  let form = btn.closest('form');
+  if(!form) return;
+  let element = form.dataset.element;
+  // perform calculations by element
+  let out = {};
+  if(element === 'generador'){
+    let vibText = form.querySelector('[name="vibracion"]').value;
+    let vibArr = parseSamples(vibText);
+    let rms = calcularRMS(vibArr);
+
+    let temp = parseFloat(form.querySelector('[name="temperatura"]').value);
+    let pres = parseFloat(form.querySelector('[name="presion"]').value);
+    let rth = parseFloat(form.querySelector('[name="rth"]').value);
+    let perd = parseFloat(form.querySelector('[name="perdidas"]').value);
+    let Tamb = parseFloat(form.querySelector('[name="Tamb"]').value);
+
+    out.vibracion_rms = (rms !== null) ? Number(rms.toFixed(3)) + ' mm/s (RMS)' : 'No hay datos';
+    out.temperatura = (!isNaN(temp)) ? temp + ' °C' : 'No hay datos';
+    out.presion = (!isNaN(pres)) ? pres + ' Pa (manométrica)' : 'No hay datos';
+
+    if(!isNaN(rth) && !isNaN(perd)){
+      let deltaT = perd * rth;
+      let Thot = (isNaN(Tamb) ? 'ambiente desconocido' : (Tamb + deltaT).toFixed(2) + ' °C');
+      out.deltaT_por_perdidas = deltaT.toFixed(2) + ' K (ΔT)';
+      out.temperatura_estimada = Thot;
+    }
+
+    displayResult('generador', out);
+    showConfirm(form);
+  }
+
+  else if(element === 'arranque'){
+    let vibText = form.querySelector('[name="vibracion"]').value;
+    let vibArr = parseSamples(vibText);
+    let rms = calcularRMS(vibArr);
+    let temp = parseFloat(form.querySelector('[name="temperatura"]').value);
+    let pres = parseFloat(form.querySelector('[name="presion"]').value);
+    let t_arr = parseFloat(form.querySelector('[name="t_arranque"]').value);
+
+    out.vibracion_rms = (rms !== null) ? Number(rms.toFixed(3)) + ' mm/s (RMS)' : 'No hay datos';
+    out.temperatura = (!isNaN(temp)) ? temp + ' °C' : 'No hay datos';
+    out.presion = (!isNaN(pres)) ? pres + ' bar' : 'No hay datos';
+    out.tiempo_arranque = (!isNaN(t_arr)) ? t_arr + ' s' : 'No hay datos';
+
+    displayResult('arranque', out);
+    showConfirm(form);
+  }
+
+  else if(element === 'valvula'){
+    let V = parseFloat(form.querySelector('[name="velocidad"]').value);
+    let D = parseFloat(form.querySelector('[name="diametro"]').value);
+    let St = parseFloat(form.querySelector('[name="strouhal"]').value) || 0.2;
+    let Tin = parseFloat(form.querySelector('[name="temp_in"]').value);
+    let Tout = parseFloat(form.querySelector('[name="temp_out"]').value);
+    let Cv = parseFloat(form.querySelector('[name="cv"]').value);
+    let deltaP = parseFloat(form.querySelector('[name="deltaP"]').value);
+
+    if(!isNaN(V) && !isNaN(D) && D > 0){
+      let f_s = St * (V / D);
+      out.frecuencia_shedding = f_s.toFixed(2) + ' Hz (estimado)';
+    } else out.frecuencia_shedding = 'Datos incompletos (V y D)';
+
+    if(!isNaN(Tin) && !isNaN(Tout)){
+      out.deltaT = (Tin - Tout).toFixed(2) + ' °C';
+    }
+
+    if(!isNaN(Cv) && !isNaN(deltaP)){
+      let q = caudalCv(Cv, deltaP);
+      out.caudal = q ? q.toFixed(3) + ' (unidad relativa)' : 'No calculable';
+    } else if(!isNaN(Cv) && isNaN(deltaP)){
+      out.caudal = 'Introduce ΔP para calcular caudal';
+    } else {
+      out.caudal = 'Cv o ΔP no definidos';
+    }
+
+    displayResult('valvula', out);
+    showConfirm(form);
+  }
+
+  else if(element === 'sensores'){
+    let R = parseFloat(form.querySelector('[name="rtd_r"]').value);
+    let mv = parseFloat(form.querySelector('[name="tc_mv"]').value);
+    let I = parseFloat(form.querySelector('[name="i_4_20"]').value);
+    let Pmin = parseFloat(form.querySelector('[name="pmin"]').value);
+    let Pmax = parseFloat(form.querySelector('[name="pmax"]').value);
+    let h = parseFloat(form.querySelector('[name="h"]').value);
+    let rho = parseFloat(form.querySelector('[name="rho"]').value) || 1000;
+    let g = parseFloat(form.querySelector('[name="g"]').value) || 9.81;
+
+    if(!isNaN(R)){
+      let t_rtd = rtdToCelsius(R);
+      out.RTD = 'R = ' + R + ' Ω → T ≈ ' + (t_rtd !== null ? t_rtd.toFixed(2) + ' °C' : 'no calculable');
+    } else out.RTD = 'No hay Resistencia RTD';
+
+    if(!isNaN(mv)){
+      let t_tc = thermocoupleMvToCelsius(mv);
+      out.termopar = 'V = ' + mv + ' mV → T ≈ ' + (t_tc !== null ? t_tc.toFixed(2) + ' °C (aprox)' : 'no calculable');
+    } else out.termopar = 'No hay dato mV';
+
+    if(!isNaN(I) && !isNaN(Pmin) && !isNaN(Pmax)){
+      let p = current420ToRange(I, Pmin, Pmax);
+      out.presion_4_20 = I + ' mA → P ≈ ' + p.toFixed(3) + ' (mismas unidades que Pmin/Pmax)';
+    } else out.presion_4_20 = 'Falta I o rango Pmin/Pmax';
+
+    if(!isNaN(h)){
+      let ph = presionHidrostatica(rho, g, h);
+      out.presion_hidro = ph.toFixed(2) + ' Pa (ρ=' + rho + ' kg/m³)';
+    } else out.presion_hidro = 'Falta altura h';
+
+    displayResult('sensores', out);
+    showConfirm(form);
+  }
+
+  // update latest summary box
+  updateLatest(out);
+}
+
+/* Mostrar resultados en la UI */
+function displayResult(key, obj){
+  let resDiv = document.getElementById('result-' + key);
+  let pre = document.getElementById('out-' + key);
+  pre.textContent = Object.entries(obj).map(([k,v]) => `${k}: ${v}`).join('\\n');
+  resDiv.style.display = 'block';
+}
+
+/* Actualizar resumen lateral */
+function updateLatest(obj){
+  let el = document.getElementById('latest');
+  el.textContent = Object.entries(obj).map(([k,v]) => `${k}: ${v}`).join('\\n');
+}
+
+/* Reset form */
+function resetForm(form){
+  if(!form) return;
+  form.reset();
+  // remove confirm if present
+  let conf = form.querySelector('.confirm');
+  if(conf) conf.style.display = 'none';
+}
+
+/* Confirm visual debajo del botón, limpiar form, scroll arriba */
+function showConfirm(form){
+  let conf = form.querySelector('.confirm');
+  if(!conf) return;
+  conf.textContent = "✅ Dashboard\\n⏳ Redirigiendo al inicio...";
+  conf.style.display = 'block';
+  conf.style.color = getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#16a34a';
+  // clear form fields after a short delay to let user see values (but user wanted immediate cleaning; spec: "Se debe limpiar el formulario")
+  // We'll clear immediately (as requested) but keep message visible for 5s.
+  form.reset();
+  // smooth scroll to top of page
+  window.scrollTo({top:0, behavior:'smooth'});
+
+  // hide after 5 seconds
+  setTimeout(()=> {
+    conf.style.display = 'none';
+  }, 5000);
+}
+
+/* -------------------------
+  Inicialización: mostrar acordeón 1 por defecto
+   ------------------------- */
+document.addEventListener('DOMContentLoaded', ()=> {
+  // open first accordion
+  let firstBody = document.querySelector('.acc-body');
+  if(firstBody) firstBody.classList.add('active');
+
+  // add Enter key handling on forms: prevent accidental submits
+  document.querySelectorAll('form').forEach(f=>{
+    f.addEventListener('submit', e=> e.preventDefault());
+  });
+});
+</script>
+</body>
+</html>
